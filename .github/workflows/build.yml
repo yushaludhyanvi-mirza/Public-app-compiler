@@ -1,38 +1,39 @@
-name: Build Private APK for Free
+name: Secure Free Dual-Repo Build
 on:
-  # This lets you trigger the build manually with a click of a button in your public repo
-  workflow_dispatch: 
+  workflow_dispatch: # Let's you manually click "Run workflow"
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # 1. Pull your PRIVATE code into the runner using your secret token
+      # 1. Secretly clone your private repository using your PAT
       - name: Checkout Private Repository
         uses: actions/checkout@v4
         with:
-          repository: 'YOUR_GITHUB_USERNAME/YOUR_PRIVATE_REPO_NAME' # Change this to your repos
-          token: ${{ secrets.PRIVATE_REPO_TOKEN }} # Uses your hidden key to gain access
+          repository: 'YOUR_GITHUB_USERNAME/YOUR_PRIVATE_REPO_NAME'
+          token: ${{ secrets.PRIVATE_REPO_TOKEN }}
 
-      # 2. Set up Java environment needed for Android
+      # 2. Set up the Kotlin/Java environment
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'zulu'
 
-      # 3. Grant execute permission to Gradle wrapper
+      # 3. Grant compile permissions
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # 4. Build the actual APK
-      - name: Build APK
-        run: ./gradlew assembleRelease
+      # 4. Build your Kotlin HTML / Multiplatform package
+      - name: Build Web App Distribution
+        run: ./gradlew build # Or your specific framework distribution command (e.g., ./gradlew browserDistribution)
 
-      # 5. Save the finished APK so you can download it
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
+      # 5. SECURE STEP: Encrypt the final package with a password before saving it publicly
+      - name: Upload Encrypted Package
+        uses: AlexGidarakos/upload-encrypted-artifact@v1
         with:
-          name: my-app-release-apk
-          path: app/build/outputs/apk/release/app-release.apk # Standard path for native Android apps
-          retention-days: 1 # Automatically deletes it tomorrow so your storage stays free
+          # Point this path to where your built files are generated (e.g., build/distributions)
+          source: 'build/distributions/' 
+          remote-name: 'secure-app-build'
+          password: ${{ secrets.ARTIFACT_PASSWORD }} # Save a random password in your GitHub Secrets
+          retention-days: 1 # Instantly wipes it from GitHub's servers after 24 hours
